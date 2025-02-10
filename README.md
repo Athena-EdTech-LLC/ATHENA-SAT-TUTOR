@@ -11,7 +11,8 @@ npm run dev
 ```sh
 cd Backend
 npm i
-nodemon index.js (database won't work since I have to publish that onto the cloud :/)
+nodemon index.js
 ```
+#### (database won't work since I have to publish that onto the cloud :/)
 
 
