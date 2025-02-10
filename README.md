@@ -1,10 +1,16 @@
-How to run: 
-- frontend:
-    - cd Frontend
-    - npm i
-    - npm run dev
- 
-- backend:
-  - cd Backend
-  - npm i 
-  - nodemon index.js (database won't work yet since i have to publish it to the cloud :/)
+## How to Run
+
+### Frontend
+```sh
+cd Frontend
+npm i
+npm run dev
+
+
+### Backend
+```sh
+cd Backend
+npm i
+nodemon index.js (database won't work since I have to publish that onto the cloud :/)
+
+
