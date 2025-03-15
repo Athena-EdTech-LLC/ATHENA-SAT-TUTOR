@@ -1,12 +1,13 @@
 import pg from 'pg';
-import express from 'express';
+import dotenv from 'dotenv'; 
+dotenv.config();
 
 const db = new pg.Client({
-    user: "postgres", 
-    host: "localhost",
-    database: "SAT_TUTOR",
-    password: "654QIAyuh-",
-    port: 5432
+  user: process.env.DB_USER,
+  host: process.env.DB_HOST,
+  database: process.env.DB_NAME,
+  password: process.env.DB_PASSWORD,
+  port: process.env.DB_PORT,
 });
 
 console.log("Attempting to connect to the database...");
