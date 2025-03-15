@@ -81,6 +81,10 @@ app.use(bodyParser.json());
 //     }
 // });
 
+app.get('/testing_backend', (req, res) => {
+    res.json({ message: 'Backend is working!' });
+})
+
 app.post('/signin', async (req, res) => {
     let userFound = false, emailExist = false;
     const { email, password } = req.body;
