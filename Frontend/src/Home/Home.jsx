@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
+// TODO: SET UP THE HOMESCREEN FOR USER (dashboard stuff)
 
-
+import { useEffect, useState } from 'react';
 
 const Home = () => {
     // auth
@@ -15,7 +15,6 @@ const Home = () => {
                 }
             });
             const data = await response.json();
-            // console.log("Auth status:", data); // debug
             setIsAuthenticated(data.signedIn);
         }
         catch(err) {
@@ -26,15 +25,9 @@ const Home = () => {
     // check on mount and every 1 second (for debugging)
     useEffect(() => {
         checkAuth();
-        // // debug: check cookie presence
-        // console.log("Current cookies:", document.cookie);
-        
-        // periodic check for debugging
         const interval = setInterval(checkAuth, 1000);
         return () => clearInterval(interval);
     }, []);
-
-
 
     return (
         <div>

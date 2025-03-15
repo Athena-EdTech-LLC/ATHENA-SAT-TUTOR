@@ -1,3 +1,4 @@
+// TODO: NEED TO CONVERT THESE FILES TO MVC FORMAT!!
 import { db } from "./database.js";
 import express from 'express';
 import bodyParser from 'body-parser';
@@ -8,114 +9,117 @@ import session from "express-session";
 const app = express();
 const store = new session.MemoryStore();
 
+// avoid CORS erros and allow cookies. NEED TO UPDATE THIS WHEN WE HAVE DOMAIN
+app.use(cors({
+  origin: 'http://localhost:5173',
+  credentials: true,                
+}));
+app.use(bodyParser.json());
 
+// setting up cookies for the software. avoid logging in for extensive time periods.
 const saltRounds = 10; 
 app.use(session(
     {
+        resave: false, 
         secret: "secret",
         cookie: {maxAge:60 * 60 * 1000}, // one hour log in session
         saveUninitialized: false,
         store: store
     }
 ));
-app.use(cors({
-  origin: 'http://localhost:5173',  // Frontend origin
-  credentials: true,                // Allow cookies (session cookies)
-}));
-app.use(bodyParser.json());
 
-// app.post("/testlogin", (req, res) => {
-//     const {username, password} = req.body; 
-//     // console.log(req.body);
-//     if (username && password) {
-//         if(req.session.authenticated) {
-//             res.json(req.session);
-//         }
-//         else{
-//             if(password === '1'){
-//                 req.session.authenticated = true;
-//                 req.session.user = {username, password};
-//                 res.json(req.session);
-//                 console.log(store);
-//                 console.log(req.sessionID);
-//             }
-//             else{
-//                 res.status(403).json({msg: "Invalid password"});
-//             }
-//         }
-//     }
-//     else{
-//         res.status(400).json({msg: "Invalid username or password"});
-//     }
-// });
-
-// app.post('/signin', async (req, res) => {
-//     let userFound = false, emailExist = false;
-//     const { email, password } = req.body;
-
-//     try {
-//         const emailCheckQuery = 'SELECT * FROM user_info WHERE email = $1';
-//         const emailResult = await db.query(emailCheckQuery, [email]);
-
-//         if (emailResult.rows.length > 0) {
-//             emailExist = true;
-//             const user = emailResult.rows[0]; 
-//             const hashedPassword = user.password; 
-//             bcrypt.compare(password, hashedPassword, (err, result) => {
-//                 if (err) {
-//                     console.error('Error comparing passwords:', err);
-//                     res.status(500).send('Error processing request');
-//                 } else if (result) {
-//                     userFound = true; 
-//                     res.json({ emailExist, userFound });
-//                 } else {
-//                     res.json({ emailExist, userFound }); 
-//                 }
-//             });
-//         } else {
-//             res.json({ emailExist, userFound }); 
-//         }
-//     } catch (err) {
-//         console.error('Error executing query:', err);
-//         res.status(500).send('Error processing request');
-//     }
-// });
+// use this to test if the backend is connected
+app.get('/testing_backend', (req, res) => {
+    res.json({ message: 'Backend is working!' });
+})
 
 app.post('/signin', async (req, res) => {
-    let userFound = false, emailExist = false;
-    const { email, password } = req.body;
+    let isEmail = false, isUsername = false;
+    let userFound = false, emailExist = false, usernameExist = false;
+    const { email_user, password } = req.body;
 
+    // check if the input is an email
+    const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
+    if (!emailRegex.test(email_user)) {
+        isUsername = true;
+    }
+    else {
+        isEmail = true;
+    }
+
+    // check if user is in the database and log in validation using email login or username login
     try {
-        const emailCheckQuery = 'SELECT * FROM user_info WHERE email = $1';
-        const emailResult = await db.query(emailCheckQuery, [email]);
+        if (isEmail == true) {
+            const emailCheckQuery = 'SELECT * FROM user_info WHERE email = $1';
+            const emailResult = await db.query(emailCheckQuery, [email_user]);
 
-        if (emailResult.rows.length > 0) {
-            emailExist = true;
-            const user = emailResult.rows[0];
-            const hashedPassword = user.password;
-            console.log(hashedPassword); 
-            console.log(password);
-            bcrypt.compare(password, hashedPassword, (err, result) => {
-                console.log(`result: ${result}`);
-                if (err) {
-                    console.error('Error comparing passwords:', err);
-                    res.status(500).send('Error processing request');
-                } else if (result == true){
-                    userFound = true;
-                    req.session.user = {
-                        id: user.id,       
-                        username: user.username,
-                        email: user.email,
-                    };
-                    res.json({ emailExist, userFound });
-                } 
-                else{
-                    res.json({ emailExist, userFound });
-                }
-            });
-        } else {
-            res.json({ emailExist, userFound });
-        }
+            if (emailResult.rows.length > 0) {
+                emailExist = true;
+                const user = emailResult.rows[0];
+                const hashedPassword = user.password;
+                console.log(hashedPassword); 
+                console.log(password);
+                bcrypt.compare(password, hashedPassword, (err, result) => {
+                    console.log(`result: ${result}`);
+                    if (err) {
+                        console.error('Error comparing passwords:', err);
+                        res.status(500).send('Error processing request');
+                    } else if (result == true){
+                        userFound = true;
+                        req.session.user = {
+                            id: user.id,       
+                            username: user.username,
+                            email: user.email,
+                        };
+                        res.json({ emailExist, userFound });
+                    } 
+                    else{
+                        res.json({ emailExist, userFound });
+                    }
+                });
+            } 
+            
+            else {
+                res.json({ emailExist, userFound });
+            }
+
+        }else{
+            console.log("username");
+            const userCheckQuery = 'SELECT * FROM user_info WHERE username = $1';
+            const userResult = await db.query(userCheckQuery, [email_user]);
+
+            if (userResult.rows.length > 0) {
+                usernameExist = true;
+                const user = userResult.rows[0];
+                const hashedPassword = user.password;
+                console.log(hashedPassword); 
+                console.log(password);
+                bcrypt.compare(password, hashedPassword, (err, result) => {
+                    console.log(`result: ${result}`);
+                    if (err) {
+                        console.error('Error comparing passwords:', err);
+                        res.status(500).send('Error processing request');
+                    } else if (result == true){
+                        userFound = true;
+                        req.session.user = {
+                            id: user.id,       
+                            username: user.username,
+                            email: user.email,
+                        };
+                        res.json({ usernameExist, userFound });
+                    } 
+                    else{
+                        res.json({ usernameExist, userFound });
+                    }
+                });
+            } 
+            
+            else {
+                res.json({ usernameExist, userFound });
+            }
+
+        } 
+        
     } catch (err) {
         console.error('Error executing query:', err);
         res.status(500).send('Error processing request');
@@ -145,6 +149,7 @@ app.post('/register', async (req, res) => {
     });
 });
 
+// homescreen
 app.get("/home", (req, res) => {
     const signedIn=false;
     if (req.session.user) {
@@ -154,7 +159,6 @@ app.get("/home", (req, res) => {
         res.json({signedIn});
     }
 });
-
 
 
 const PORT = process.env.PORT || 3000;
